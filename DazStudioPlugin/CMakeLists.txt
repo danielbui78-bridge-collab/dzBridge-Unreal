@@ -13,7 +13,7 @@ endif()
 if(WIN32)
 	set(OS_SOURCES 
 		DzUnrealBridge.rc
-		DzUnrealBridge.def
+#		DzUnrealBridge.def
 	)
 elseif(APPLE)	
 	set(OS_SOURCES "")
@@ -48,15 +48,18 @@ target_include_directories(${DZ_PLUGIN_TGT_NAME}
 	${OPENSUBDIV_INCLUDE}
 )
 
+
 target_link_libraries(${DZ_PLUGIN_TGT_NAME}
 	PRIVATE 
 	dzcore
-	${DZBRIDGE_LIB}
+	optimized ${DZBRIDGE_LIB}
+	debug ${DZBRIDGE_LIB_DEBUG}
 	${DZSDK_QT_CORE_TARGET}
 	${DZSDK_QT_GUI_TARGET}
 	${DZSDK_QT_SCRIPT_TARGET}
 	${DZSDK_QT_NETWORK_TARGET}
 )
+
 
 set_target_properties (${DZ_PLUGIN_TGT_NAME}
 	PROPERTIES

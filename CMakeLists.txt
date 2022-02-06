@@ -24,7 +24,9 @@ if(APPLE)
 	endif()
 endif(APPLE)
 
-project("DazRunTimePlugins")
+project("DzBridge-Unreal")
+set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
+#set(USE_DZBRIDGE_STATIC "ON")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -163,17 +165,35 @@ set(DZSDK_QT_XML_TARGET	Qt4::QtXml)
 ############################
 # DzBridge SETTINGS
 ############################
-set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
+#set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
 if(NOT DZBRIDGE_DIR)
 	message(FATAL_ERROR "Missing path to DzBridge folder")
 	return()
 endif()
 set(DZBRIDGE_INCLUDE_DIR "${DZBRIDGE_DIR}/include" CACHE PATH "Path to Opensubdiv include folder (usually same as root folder)" )
 if(WIN32)
-	set(DZBRIDGE_LIB "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
+	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
+	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
+
+	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
+	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
 elseif(APPLE)
-	set(DZBRIDGE_LIB "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
+	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
+	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
+
+	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
+	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
 endif()
+
+
+if(NOT USE_DZBRIDGE_STATIC)
+	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_SHARED}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_SHARED}" CACHE FILEPATH "")
+else()
+	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_STATIC}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_STATIC}" CACHE FILEPATH "")
+endif()
+
 
 ############################
 # FBX SETTINGS
