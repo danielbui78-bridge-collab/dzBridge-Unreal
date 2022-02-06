@@ -15,8 +15,8 @@ class DzUnrealDialog : public DzBridgeDialog {
 	Q_PROPERTY(QWidget* wIntermediateFolderEdit READ getIntermediateFolderEdit)
 	Q_PROPERTY(QWidget* wPortEdit READ getPortEdit)
 public:
-	QLineEdit* getIntermediateFolderEdit() { return intermediateFolderEdit; }
-	QLineEdit* getPortEdit() { return portEdit; }
+	Q_INVOKABLE QLineEdit* getIntermediateFolderEdit() { return intermediateFolderEdit; }
+	Q_INVOKABLE QLineEdit* getPortEdit() { return portEdit; }
 
 	QLineEdit* portEdit;
 	QLineEdit* intermediateFolderEdit;

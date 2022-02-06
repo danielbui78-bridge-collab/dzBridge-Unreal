@@ -8,23 +8,22 @@
 #include <QtCore/qtextstream.h>
 #include <QUuid.h>
 #include <DzRuntimePluginAction.h>
-#include "DzBridgeSubdivisionDialog.h"
 
 class DzUnrealDialog;
 
 class DzUnrealAction : public DzRuntimePluginAction {
 	Q_OBJECT
-	Q_PROPERTY(QWidget* wBridgeDialog READ getBridgeDialog WRITE setBridgeDialog)
+	Q_PROPERTY(DzBasicDialog* wBridgeDialog READ getBridgeDialog WRITE setBridgeDialog)
 public:
 	 DzUnrealAction();
 
-	 DzUnrealDialog* getBridgeDialog() { return BridgeDialog; }
-	 void setBridgeDialog(QWidget* arg_dlg) { BridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); }
+	 Q_INVOKABLE DzUnrealDialog* getBridgeDialog() { return BridgeDialog; }
+	 Q_INVOKABLE bool setBridgeDialog(DzBasicDialog* arg_dlg);
+
 	 Q_INVOKABLE void resetToDefaults();
 
 protected:
 	 int Port;
-	 DzBridgeSubdivisionDialog* SubdivisionDialog;
 	 DzUnrealDialog *BridgeDialog;
 
 	 void executeAction();
