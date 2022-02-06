@@ -32,7 +32,6 @@ DzUnrealAction::DzUnrealAction() :
 {
 	 Port = 0;
 	 BridgeDialog = nullptr;
-	 SubdivisionDialog = nullptr;
      NonInteractiveMode = 0;
 	 AssetType = QString("SkeletalMesh");
 	 //Setup Icon
@@ -116,11 +115,14 @@ void DzUnrealAction::executeAction()
 			ExportMorphs = true;
 			MorphString = ScriptOnly_MorphList.join("\n1\n");
 			MorphString += "\n1\n.CTRLVS\n2\nAnything\n0";
-			DzBridgeMorphSelectionDialog* MorphSelectionDialog = DzBridgeMorphSelectionDialog::Get(BridgeDialog);
+			if (m_morphSelectionDialog == nullptr)
+			{
+				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(BridgeDialog);
+			}
 			MorphMapping.clear();
 			foreach(QString morphName, ScriptOnly_MorphList)
 			{
-				QString label = MorphSelectionDialog->GetMorphLabelFromName(morphName);
+				QString label = m_morphSelectionDialog->GetMorphLabelFromName(morphName);
 				MorphMapping.insert(morphName, label);
 			}
 
@@ -166,19 +168,22 @@ void DzUnrealAction::executeAction()
         ExportSubdivisions = BridgeDialog->subdivisionEnabledCheckBox->isChecked();
         ShowFbxDialog = BridgeDialog->showFbxDialogCheckBox->isChecked();
         ExportMaterialPropertiesCSV = BridgeDialog->exportMaterialPropertyCSVCheckBox->isChecked();
-        SubdivisionDialog = DzBridgeSubdivisionDialog::Get(BridgeDialog);
+		if (m_subdivisionDialog == nullptr)
+		{
+			m_subdivisionDialog = DzBridgeSubdivisionDialog::Get(BridgeDialog);
+		}
         FBXVersion = BridgeDialog->fbxVersionCombo->currentText();
 
         if (AssetType == "SkeletalMesh" && ExportSubdivisions)
         {
             // export base mesh
             ExportBaseMesh = true;
-            SubdivisionDialog->LockSubdivisionProperties(false);
+            m_subdivisionDialog->LockSubdivisionProperties(false);
             Export();
         }
 
         ExportBaseMesh = false;
-        SubdivisionDialog->LockSubdivisionProperties(ExportSubdivisions);
+        m_subdivisionDialog->LockSubdivisionProperties(ExportSubdivisions);
         Export();
     }
 }
@@ -245,12 +250,10 @@ void DzUnrealAction::WriteConfiguration()
 
 		 if (ExportMorphs)
 		 {
-			 DzMainWindow* mw = dzApp->getInterface();
-			 DzBridgeMorphSelectionDialog* morphDialog = DzBridgeMorphSelectionDialog::Get(mw);
-			 if (morphDialog->IsAutoJCMEnabled())
+			 if (m_morphSelectionDialog->IsAutoJCMEnabled())
 			 {
 				 writer.startMemberArray("JointLinks", true);
-				 QList<JointLinkInfo> JointLinks = morphDialog->GetActiveJointControlledMorphs(Selection);
+				 QList<JointLinkInfo> JointLinks = m_morphSelectionDialog->GetActiveJointControlledMorphs(Selection);
 				 foreach(JointLinkInfo linkInfo, JointLinks)
 				 {
 					 writer.startObject(true);
@@ -279,7 +282,7 @@ void DzUnrealAction::WriteConfiguration()
 		 
 		 writer.startMemberArray("Subdivisions", true);
 		 if (ExportSubdivisions)
-			 SubdivisionDialog->WriteSubdivisions(writer);
+			 m_subdivisionDialog->WriteSubdivisions(writer);
 
 		 writer.finishArray();
 	 }
@@ -555,9 +558,9 @@ void DzUnrealAction::resetToDefaults()
 	}
 	BridgeDialog->resetToDefaults();
 
-	if (SubdivisionDialog != nullptr)
+	if (m_subdivisionDialog != nullptr)
 	{
-		foreach(QObject * obj, SubdivisionDialog->getSubdivisionCombos())
+		foreach(QObject * obj, m_subdivisionDialog->getSubdivisionCombos())
 		{
 			QComboBox* combo = qobject_cast<QComboBox*>(obj);
 			if (combo)
@@ -567,6 +570,18 @@ void DzUnrealAction::resetToDefaults()
 	// reset morph selection
 	//DzBridgeMorphSelectionDialog::Get(nullptr)->PrepareDialog();
 
+}
+
+bool DzUnrealAction::setBridgeDialog(DzBasicDialog* arg_dlg) 
+{
+	BridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); 
+
+	if (BridgeDialog == nullptr && arg_dlg != nullptr)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 #include "moc_DzUnrealAction.cpp"
