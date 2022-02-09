@@ -149,7 +149,7 @@ void DzUnrealAction::executeAction()
 		if (RootFolder == "" || NonInteractiveMode == 0) RootFolder = BridgeDialog->intermediateFolderEdit->text().replace("\\","/");
 		if (ExportFolder == "" || NonInteractiveMode == 0) ExportFolder = CharacterName;
 		DestinationPath = RootFolder + "/" + ExportFolder + "/";
-		if (m_sExportFbx == "") m_sExportFbx = CharacterName;
+		if (m_sExportFbx == "" || NonInteractiveMode == 0) m_sExportFbx = CharacterName;
         CharacterFBX = DestinationPath + m_sExportFbx + ".fbx";
 //        CharacterBaseFBX = DestinationPath + m_sExportFbx + "_base.fbx";
 //        CharacterHDFBX = DestinationPath + m_sExportFbx + "_HD.fbx";
