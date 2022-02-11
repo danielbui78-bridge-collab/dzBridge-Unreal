@@ -46,7 +46,6 @@ DzUnrealDialog::DzUnrealDialog(QWidget *parent) :
 	int revision = PLUGIN_REV % 1000;
 	setWindowTitle(tr("Daz To Unreal v%1.%2 Pre-Release Build %3.%4").arg(PLUGIN_MAJOR).arg(PLUGIN_MINOR).arg(revision).arg(PLUGIN_BUILD));
 	layout()->setSizeConstraint(QLayout::SetFixedSize);
-	QFormLayout* mainLayout = new QFormLayout();
 
 	settings = new QSettings("Daz 3D", "DazToUnreal");
 

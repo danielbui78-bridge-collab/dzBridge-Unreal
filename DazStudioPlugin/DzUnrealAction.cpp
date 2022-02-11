@@ -145,8 +145,8 @@ void DzUnrealAction::executeAction()
     if (NonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
     {
         // Collect the values from the dialog fields
-		if (CharacterName == "" || NonInteractiveMode == 0) CharacterName = BridgeDialog->assetNameEdit->text();
-		if (RootFolder == "" || NonInteractiveMode == 0) RootFolder = BridgeDialog->intermediateFolderEdit->text().replace("\\","/");
+		if (CharacterName == "" || NonInteractiveMode == 0) CharacterName = BridgeDialog->getAssetNameEdit()->text();
+		if (RootFolder == "" || NonInteractiveMode == 0) RootFolder = BridgeDialog->getIntermediateFolderEdit()->text().replace("\\", "/");
 		if (ExportFolder == "" || NonInteractiveMode == 0) ExportFolder = CharacterName;
 		DestinationPath = RootFolder + "/" + ExportFolder + "/";
 		if (m_sExportFbx == "" || NonInteractiveMode == 0) m_sExportFbx = CharacterName;
@@ -157,22 +157,22 @@ void DzUnrealAction::executeAction()
 		if (NonInteractiveMode == 0 )
 		{
 			// TODO: consider removing once findData( ) method above is completely implemented
-			AssetType = cleanString(BridgeDialog->assetTypeCombo->currentText());
+			AssetType = cleanString(BridgeDialog->getAssetTypeCombo()->currentText());
 
 			MorphString = BridgeDialog->GetMorphString();
 			MorphMapping = BridgeDialog->GetMorphMapping();
-			ExportMorphs = BridgeDialog->morphsEnabledCheckBox->isChecked();
+			ExportMorphs = BridgeDialog->getMorphsEnabledCheckBox()->isChecked();
 		}
 
 		Port = BridgeDialog->portEdit->text().toInt();
-        ExportSubdivisions = BridgeDialog->subdivisionEnabledCheckBox->isChecked();
-        ShowFbxDialog = BridgeDialog->showFbxDialogCheckBox->isChecked();
-        ExportMaterialPropertiesCSV = BridgeDialog->exportMaterialPropertyCSVCheckBox->isChecked();
+        ExportSubdivisions = BridgeDialog->getSubdivisionEnabledCheckBox()->isChecked();
+        ShowFbxDialog = BridgeDialog->getShowFbxDialogCheckBox()->isChecked();
+        ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
 		if (m_subdivisionDialog == nullptr)
 		{
 			m_subdivisionDialog = DzBridgeSubdivisionDialog::Get(BridgeDialog);
 		}
-        FBXVersion = BridgeDialog->fbxVersionCombo->currentText();
+        FBXVersion = BridgeDialog->getFbxVersionCombo()->currentText();
 
         if (AssetType == "SkeletalMesh" && ExportSubdivisions)
         {
