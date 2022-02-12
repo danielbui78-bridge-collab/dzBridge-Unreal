@@ -18,10 +18,6 @@ public:
 	Q_INVOKABLE QLineEdit* getIntermediateFolderEdit() { return intermediateFolderEdit; }
 	Q_INVOKABLE QLineEdit* getPortEdit() { return portEdit; }
 
-	QLineEdit* portEdit;
-	QLineEdit* intermediateFolderEdit;
-	QPushButton* intermediateFolderButton;
-
 	/** Constructor **/
 	 DzUnrealDialog(QWidget *parent=nullptr);
 
@@ -36,5 +32,9 @@ protected slots:
 
 protected:
 	Q_INVOKABLE bool loadSavedSettings();
+
+	QLineEdit* portEdit;
+	QLineEdit* intermediateFolderEdit;
+	QPushButton* intermediateFolderButton;
 
 };

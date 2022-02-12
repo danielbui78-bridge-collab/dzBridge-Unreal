@@ -107,7 +107,7 @@ void DzUnrealAction::executeAction()
 		// 4) dialog intermediateFolder (aka RootFolder) to get/setRootFolder
 		//connect(BridgeDialog->intermediateFolderEdit, SIGNAL(QLineEdit::textChanged()), this, SLOT(setRootFolder()));
 		// TODO: Folder name validation on RootFolder
-		if (RootFolder != "") BridgeDialog->intermediateFolderEdit->setText( RootFolder );
+		if (RootFolder != "") BridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
 
 		// 5) ScriptOnly_MorphList to MorphString
 		if (ScriptOnly_MorphList.isEmpty() == false)
@@ -164,7 +164,7 @@ void DzUnrealAction::executeAction()
 			ExportMorphs = BridgeDialog->getMorphsEnabledCheckBox()->isChecked();
 		}
 
-		Port = BridgeDialog->portEdit->text().toInt();
+		Port = BridgeDialog->getPortEdit()->text().toInt();
         ExportSubdivisions = BridgeDialog->getSubdivisionEnabledCheckBox()->isChecked();
         ShowFbxDialog = BridgeDialog->getShowFbxDialogCheckBox()->isChecked();
         ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
