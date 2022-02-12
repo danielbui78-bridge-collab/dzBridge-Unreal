@@ -61,17 +61,23 @@ DzUnrealDialog::DzUnrealDialog(QWidget *parent) :
 	portEdit = new QLineEdit("32345");
 	connect(portEdit, SIGNAL(textChanged(const QString &)), this, SLOT(HandlePortChanged(const QString &)));
 
+	// Export Material Property CSV option
+	exportMaterialPropertyCSVCheckBox = new QCheckBox("", this);
+	connect(exportMaterialPropertyCSVCheckBox, SIGNAL(stateChanged(int)), this, SLOT(HandleExportMaterialPropertyCSVCheckBoxChange(int)));
+
 	QFormLayout* advancedLayout = qobject_cast<QFormLayout*>(advancedWidget->layout());
 	if (advancedLayout)
 	{
 		advancedLayout->addRow("Port", portEdit);
 		advancedLayout->addRow("Intermediate Folder", intermediateFolderLayout);
+		advancedLayout->addRow("Export Material CSV", exportMaterialPropertyCSVCheckBox);
 	}
 
 	// Help pop-ups
 	intermediateFolderEdit->setWhatsThis("DazToUnreal will collect the assets in a subfolder under this folder.  Unreal will import them from here.");
 	intermediateFolderButton->setWhatsThis("DazToUnreal will collect the assets in a subfolder under this folder.  Unreal will import them from here.");
 	portEdit->setWhatsThis("The UDP port used to talk to the DazToUnreal Unreal plugin.\nThis needs to match the port set in the Project Settings in Unreal.\nDefault is 32345.");
+	exportMaterialPropertyCSVCheckBox->setWhatsThis("Checking this will write out a CSV of all the material properties.  Useful for reference when changing materials.");
 
 	// Set Defaults
 	resetToDefaults();
@@ -98,6 +104,10 @@ bool DzUnrealDialog::loadSavedSettings()
 	{
 		portEdit->setText(settings->value("Port").toString());
 	}
+	if (!settings->value("ExportMaterialPropertyCSV").isNull())
+	{
+		exportMaterialPropertyCSVCheckBox->setChecked(settings->value("ExportMaterialPropertyCSV").toBool());
+	}
 
 	return true;
 }
@@ -110,6 +120,7 @@ void DzUnrealDialog::resetToDefaults()
 	intermediateFolderEdit->setText(DefaultPath);
 
 	portEdit->setText("32345");
+	exportMaterialPropertyCSVCheckBox->setChecked(false);
 
 }
 
