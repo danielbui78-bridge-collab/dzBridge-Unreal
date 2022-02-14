@@ -28,6 +28,7 @@ public:
 
 	Q_INVOKABLE void resetToDefaults();
 
+	QString getRootFolder();
 protected slots:
 	void HandleSelectIntermediateFolderButton();
 	void HandlePortChanged(const QString& port);

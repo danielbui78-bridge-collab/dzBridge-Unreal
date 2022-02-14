@@ -147,4 +147,12 @@ void DzUnrealDialog::HandlePortChanged(const QString& port)
 	settings->setValue("Port", port);
 }
 
+QString DzUnrealDialog::getRootFolder()
+{
+	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
+	if (intermediateFolderEdit)
+		rootFolder = intermediateFolderEdit->text().replace("\\","/");
+	return rootFolder;
+}
+
 #include "moc_DzUnrealDialog.cpp"
