@@ -40,6 +40,8 @@ DzUnrealAction::DzUnrealAction() :
 	 QIcon icon;
 	 icon.addPixmap(basePixmap, QIcon::Normal, QIcon::Off);
 	 QAction::setIcon(icon);
+
+	 m_bGenerateNormalMaps = true;
 }
 
 void DzUnrealAction::executeAction()
@@ -54,8 +56,7 @@ void DzUnrealAction::executeAction()
              QMessageBox::warning(0, tr("Error"),
                  tr("The main window has not been created yet."), QMessageBox::Ok);
          }
-
-		  return;
+		 return;
 	 }
 
 	 // Create and show the dialog. If the user cancels, exit early,
@@ -77,39 +78,11 @@ void DzUnrealAction::executeAction()
 		BridgeDialog = new DzUnrealDialog(mw);
 	}
 
-	//////////////////////////////////////
-	// Connect bridge dialog to exposed properties for scripting
-	//////////////////////////////////////
+	// Prepare member variables when not using GUI
 	if (NonInteractiveMode == 1)
 	{
-		// 1) dialog AssetType to get/setAssetType
-		//connect(BridgeDialog->assetTypeCombo, SIGNAL(static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated)), this, SLOT(setAssetType()));
-		// TODO: add "Data" field with sanitized AssetType string to comboBox
-		// TODO: then, change findText to findData
-		//BridgeDialog->assetTypeCombo->setCurrentIndex(BridgeDialog->assetTypeCombo->findText(AssetType));
-
-		// 2) dialog AssetName to get/setExportFilename
-		//connect(BridgeDialog->assetNameEdit, SIGNAL(QLineEdit::textChanged()), this, SLOT(setExportFilename()));
-		// TODO: assess whether ValidateText is needed below
-		//if (CharacterName != "")
-		//{
-		//	BridgeDialog->assetNameEdit->setText(CharacterName);
-		//}
-		//else
-		//{
-		//	BridgeDialog->assetNameEdit->setText(dzScene->getPrimarySelection()->getLabel().remove(QRegExp("[^A-Za-z0-9_]")));
-		//}
-
-		// 3) ?? to get/setExportFolder
-		// n/a: Not accessible by Bridge UI, ExportFolder is script-only for now
-		// TODO: Folder name validation on ExportFolder
-
-		// 4) dialog intermediateFolder (aka RootFolder) to get/setRootFolder
-		//connect(BridgeDialog->intermediateFolderEdit, SIGNAL(QLineEdit::textChanged()), this, SLOT(setRootFolder()));
-		// TODO: Folder name validation on RootFolder
 		if (RootFolder != "") BridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
 
-		// 5) ScriptOnly_MorphList to MorphString
 		if (ScriptOnly_MorphList.isEmpty() == false)
 		{
 			ExportMorphs = true;
@@ -125,7 +98,6 @@ void DzUnrealAction::executeAction()
 				QString label = m_morphSelectionDialog->GetMorphLabelFromName(morphName);
 				MorphMapping.insert(morphName, label);
 			}
-
 		}
 		else
 		{
@@ -144,47 +116,13 @@ void DzUnrealAction::executeAction()
 	}
     if (NonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
     {
-        // Collect the values from the dialog fields
-		if (CharacterName == "" || NonInteractiveMode == 0) CharacterName = BridgeDialog->getAssetNameEdit()->text();
-		if (RootFolder == "" || NonInteractiveMode == 0) RootFolder = BridgeDialog->getIntermediateFolderEdit()->text().replace("\\", "/");
-		if (ExportFolder == "" || NonInteractiveMode == 0) ExportFolder = CharacterName;
-		DestinationPath = RootFolder + "/" + ExportFolder + "/";
-		if (m_sExportFbx == "" || NonInteractiveMode == 0) m_sExportFbx = CharacterName;
-        CharacterFBX = DestinationPath + m_sExportFbx + ".fbx";
-//        CharacterBaseFBX = DestinationPath + m_sExportFbx + "_base.fbx";
-//        CharacterHDFBX = DestinationPath + m_sExportFbx + "_HD.fbx";
-
-		if (NonInteractiveMode == 0 )
-		{
-			// TODO: consider removing once findData( ) method above is completely implemented
-			AssetType = cleanString(BridgeDialog->getAssetTypeCombo()->currentText());
-
-			MorphString = BridgeDialog->GetMorphString();
-			MorphMapping = BridgeDialog->GetMorphMapping();
-			ExportMorphs = BridgeDialog->getMorphsEnabledCheckBox()->isChecked();
-		}
-
+		// Read in Custom GUI values
 		Port = BridgeDialog->getPortEdit()->text().toInt();
-        ExportSubdivisions = BridgeDialog->getSubdivisionEnabledCheckBox()->isChecked();
-        ShowFbxDialog = BridgeDialog->getShowFbxDialogCheckBox()->isChecked();
-        ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
-		if (m_subdivisionDialog == nullptr)
-		{
-			m_subdivisionDialog = DzBridgeSubdivisionDialog::Get(BridgeDialog);
-		}
-        FBXVersion = BridgeDialog->getFbxVersionCombo()->currentText();
+		ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
+		// Read in Common GUI values
+		readGUI(BridgeDialog);
 
-        if (AssetType == "SkeletalMesh" && ExportSubdivisions)
-        {
-            // export base mesh
-            ExportBaseMesh = true;
-            m_subdivisionDialog->LockSubdivisionProperties(false);
-            Export();
-        }
-
-        ExportBaseMesh = false;
-        m_subdivisionDialog->LockSubdivisionProperties(ExportSubdivisions);
-        Export();
+		exportHD();
     }
 }
 
@@ -195,96 +133,35 @@ void DzUnrealAction::WriteConfiguration()
 	 DTUfile.open(QIODevice::WriteOnly);
 	 DzJsonWriter writer(&DTUfile);
 	 writer.startObject(true);
-	 writer.addMember("DTU Version", 3);
-	 writer.addMember("Asset Name", CharacterName);
-	 writer.addMember("Asset Type", AssetType);
-	 writer.addMember("FBX File", CharacterFBX);
-	 QString CharacterBaseFBX = CharacterFBX;
-	 CharacterBaseFBX.replace(".fbx", "_base.fbx");
-	 writer.addMember("Base FBX File", CharacterBaseFBX);
-	 QString CharacterHDFBX = CharacterFBX;
-	 CharacterHDFBX.replace(".fbx", "_HD.fbx");
-	 writer.addMember("HD FBX File", CharacterHDFBX);
-	 writer.addMember("Import Folder", DestinationPath);
-	 // DB Dec-21-2021: additional metadata
-	 writer.addMember("Product Name", ProductName);
-	 writer.addMember("Product Component Name", ProductComponentName);
+
+	 writeDTUHeader(writer);
 
 	 if (AssetType != "Environment")
 	 {
+		 QTextStream *pCVSStream = nullptr;
 		 if (ExportMaterialPropertiesCSV)
 		 {
 			 QString filename = DestinationPath + CharacterName + "_Maps.csv";
 			 QFile file(filename);
 			 file.open(QIODevice::WriteOnly);
-			 QTextStream stream(&file);
-			 stream << "Version, Object, Material, Type, Color, Opacity, File" << endl;
-
-			 writer.startMemberArray("Materials", true);
-			 WriteMaterials(Selection, writer, stream);
-			 writer.finishArray();
+			 pCVSStream = new QTextStream(&file);
+			 *pCVSStream << "Version, Object, Material, Type, Color, Opacity, File" << endl;
 		 }
-		 else
+		 writeAllMaterials(Selection, writer, pCVSStream);
+		 writeAllMorphs(writer);
+		 writeAllSubdivisions(writer);
+		 writeAllDForceInfo(Selection, writer);
+
+		 if (AssetType == "SkeletalMesh")
 		 {
-			 QString throwaway;
-			 QTextStream stream(&throwaway);
-			 writer.startMemberArray("Materials", true);
-			 WriteMaterials(Selection, writer, stream);
-			 writer.finishArray();
-		 }
-
-
-
-		 writer.startMemberArray("Morphs", true);
-		 if (ExportMorphs)
-		 {
-			  for (QMap<QString, QString>::iterator i = MorphMapping.begin(); i != MorphMapping.end(); ++i)
-			  {
-					writer.startObject(true);
-					writer.addMember("Name", i.key());
-					writer.addMember("Label", i.value());
-					writer.finishObject();
-			  }
-		 }
-		 writer.finishArray();
-
-		 if (ExportMorphs)
-		 {
-			 if (m_morphSelectionDialog->IsAutoJCMEnabled())
+			 bool ExportDForce = true;
+			 writer.startMemberArray("dForce WeightMaps", true);
+			 if (ExportDForce)
 			 {
-				 writer.startMemberArray("JointLinks", true);
-				 QList<JointLinkInfo> JointLinks = m_morphSelectionDialog->GetActiveJointControlledMorphs(Selection);
-				 foreach(JointLinkInfo linkInfo, JointLinks)
-				 {
-					 writer.startObject(true);
-					 writer.addMember("Bone", linkInfo.Bone);
-					 writer.addMember("Axis", linkInfo.Axis);
-					 writer.addMember("Morph", linkInfo.Morph);
-					 writer.addMember("Scalar", linkInfo.Scalar);
-					 writer.addMember("Alpha", linkInfo.Alpha);
-					 if (linkInfo.Keys.count() > 0)
-					 {
-						 writer.startMemberArray("Keys", true);
-						 foreach(JointLinkKey key, linkInfo.Keys)
-						 {
-							 writer.startObject(true);
-							 writer.addMember("Angle", key.Angle);
-							 writer.addMember("Value", key.Value);
-							 writer.finishObject();
-						 }
-						 writer.finishArray();
-					 }
-					 writer.finishObject();
-				 }
-				 writer.finishArray();
+				 WriteWeightMaps(Selection, writer);
 			 }
+			 writer.finishArray();
 		 }
-		 
-		 writer.startMemberArray("Subdivisions", true);
-		 if (ExportSubdivisions)
-			 m_subdivisionDialog->WriteSubdivisions(writer);
-
-		 writer.finishArray();
 	 }
 
 	 if (AssetType == "Pose")
@@ -336,154 +213,6 @@ void DzUnrealAction::WriteConfiguration()
 void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
 {
 
-}
-
-// Write out all the surface properties
-void DzUnrealAction::WriteMaterials(DzNode* Node, DzJsonWriter& Writer, QTextStream& Stream)
-{
-	 DzObject* Object = Node->getObject();
-	 DzShape* Shape = Object ? Object->getCurrentShape() : NULL;
-
-	 if (Shape)
-	 {
-		  for (int i = 0; i < Shape->getNumMaterials(); i++)
-		  {
-				DzMaterial* Material = Shape->getMaterial(i);
-				if (Material)
-				{
-					Writer.startObject(true);
-					Writer.addMember("Version", 3);
-					Writer.addMember("Asset Name", Node->getLabel());
-					Writer.addMember("Material Name", Material->getName());
-					Writer.addMember("Material Type", Material->getMaterialName());
-					DzPresentation* presentation = Node->getPresentation();
-					if (presentation)
-					{
-						const QString presentationType = presentation->getType();
-						Writer.addMember("Value", presentationType);
-					}
-					else
-					{
-						Writer.addMember("Value", QString("Unknown"));
-					}
-
-					 Writer.startMemberArray("Properties", true);
-					 // Presentation node is stored as first element in Property array for compatibility with UE plugin's basematerial search algorithm
-					 if (presentation)
-					 {
-						  const QString presentationType = presentation->getType();
-						  Writer.startObject(true);
-						  Writer.addMember("Name", QString("Asset Type"));
-						  Writer.addMember("Value", presentationType);
-						  Writer.addMember("Data Type", QString("String"));
-						  Writer.addMember("Texture", QString(""));
-						  Writer.finishObject();
-
-						  if (ExportMaterialPropertiesCSV)
-						  {
-							  Stream << "2, " << Node->getLabel() << ", " << Material->getName() << ", " << Material->getMaterialName() << ", " << "Asset Type" << ", " << presentationType << ", " << "String" << ", " << "" << endl;
-						  }
-					 }
-
-					 for (int propertyIndex = 0; propertyIndex < Material->getNumProperties(); propertyIndex++)
-					 {
-						  DzProperty* Property = Material->getProperty(propertyIndex);
-						  QString Name = Property->getName();
-						  QString TextureName = "";
-						  QString dtuPropType = "";
-						  QString dtuPropValue = "";
-						  double dtuPropNumericValue = 0.0;
-						  bool bUseNumeric = false;
-
-						  DzImageProperty* ImageProperty = qobject_cast<DzImageProperty*>(Property);
-						  DzNumericProperty* NumericProperty = qobject_cast<DzNumericProperty*>(Property);
-						  DzColorProperty* ColorProperty = qobject_cast<DzColorProperty*>(Property);
-						  if (ImageProperty)
-						  {
-								if (ImageProperty->getValue())
-								{
-									 TextureName = ImageProperty->getValue()->getFilename();
-								}
-								dtuPropValue = Material->getDiffuseColor().name();
-								dtuPropType = QString("Texture");
-								
-								// Check if this is a Normal Map with Strength stored in lookup table
-								if (m_imgPropertyTable_NormalMapStrength.contains(ImageProperty))
-								{
-									dtuPropType = QString("Double");
-									dtuPropNumericValue = m_imgPropertyTable_NormalMapStrength[ImageProperty];
-									bUseNumeric = true;
-								}
-						  }
-						  // DzColorProperty is subclass of DzNumericProperty
-						  else if (ColorProperty)
-						  {
-								if (ColorProperty->getMapValue())
-								{
-									 TextureName = ColorProperty->getMapValue()->getFilename();
-								}
-								dtuPropValue = ColorProperty->getColorValue().name();
-								dtuPropType = QString("Color");
-						  }
-						  else if (NumericProperty)
-						  {
-							  if (NumericProperty->getMapValue())
-							  {
-								  TextureName = NumericProperty->getMapValue()->getFilename();
-							  }
-							  dtuPropType = QString("Double");
-							  dtuPropNumericValue = NumericProperty->getDoubleValue();
-							  bUseNumeric = true;
-						  }
-						  else
-						  {
-							  // unsupported property type
-							  continue;
-						  }
-
-						  QString dtuTextureName = TextureName;
-						  if (TextureName != "")
-						  {
-							  if (this->UseRelativePaths)
-							  {
-								  dtuTextureName = dzApp->getContentMgr()->getRelativePath(TextureName, true);
-							  }
-							  if (isTemporaryFile(TextureName))
-							  {
-								  dtuTextureName = exportWithDTU(TextureName, Node->getLabel() + "_" + Material->getName());
-							  }
-						  }
-						  if (bUseNumeric)
-							  writeJSON_Property_Texture(Writer, Name, dtuPropNumericValue, dtuPropType, dtuTextureName);
-						  else
-							  writeJSON_Property_Texture(Writer, Name, dtuPropValue, dtuPropType, dtuTextureName);
-
-						  if (ExportMaterialPropertiesCSV)
-						  {
-							  if (bUseNumeric)
-								  Stream << "2, " << Node->getLabel() << ", " << Material->getName() << ", " << Material->getMaterialName() << ", " << Name << ", " << dtuPropNumericValue << ", " << dtuPropType << ", " << TextureName << endl;
-							  else
-								  Stream << "2, " << Node->getLabel() << ", " << Material->getName() << ", " << Material->getMaterialName() << ", " << Name << ", " << dtuPropValue << ", " << dtuPropType << ", " << TextureName << endl;
-						  }
-						  continue;
-
-
-
-					 } // for (int propertyIndex = 0;
-
-					 Writer.finishArray();
-
-					 Writer.finishObject();
-				}
-		  }
-	 }
-
-	 DzNodeListIterator Iterator = Node->nodeChildrenIterator();
-	 while (Iterator.hasNext())
-	 {
-		  DzNode* Child = Iterator.next();
-		  WriteMaterials(Child, Writer, Stream);
-	 }
 }
 
 void DzUnrealAction::WriteInstances(DzNode* Node, DzJsonWriter& Writer, QMap<QString, DzMatrix3>& WritenInstances, QList<DzGeometry*>& ExportedGeometry, QUuid ParentID)

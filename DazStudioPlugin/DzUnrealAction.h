@@ -27,7 +27,7 @@ protected:
 	 DzUnrealDialog *BridgeDialog;
 
 	 void executeAction();
-	 void WriteMaterials(DzNode* Node, DzJsonWriter& Writer, QTextStream& Stream);
+//	 void WriteMaterials(DzNode* Node, DzJsonWriter& Writer, QTextStream* CVSStream = nullptr);
 	 void WriteInstances(DzNode* Node, DzJsonWriter& Writer, QMap<QString, DzMatrix3>& WritenInstances, QList<DzGeometry*>& ExportedGeometry, QUuid ParentID = QUuid());
 	 QUuid WriteInstance(DzNode* Node, DzJsonWriter& Writer, QUuid ParentID);
 	 Q_INVOKABLE void WriteConfiguration();
