@@ -7,7 +7,9 @@
 #include "DzBridgeMorphSelectionDialog.h"
 #include "DzBridgeSubdivisionDialog.h"
 
-//DZ_PLUGIN_DEFINITION("DazToUnreal");
+#ifdef __APPLE__
+DZ_PLUGIN_DEFINITION("DazToUnreal");
+#else
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, ULONG fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason) {
@@ -25,6 +27,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, ULONG fdwReason, LPVOID lpvReserved)
 static DzPlugin s_pluginDef("DazToUnreal");
 extern "C" __declspec(dllexport) DzVersion getSDKVersion() { return DZ_SDK_VERSION; }
 extern "C" __declspec(dllexport) DzPlugin * getPluginDefinition() { return &s_pluginDef; }
+#endif
 
 DZ_PLUGIN_AUTHOR("Daz 3D, Inc");
 
