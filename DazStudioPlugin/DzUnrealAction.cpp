@@ -136,7 +136,7 @@ void DzUnrealAction::WriteConfiguration()
 
 	 writeDTUHeader(writer);
 
-	 if (AssetType != "Environment")
+	 if (AssetType.toLower().contains("mesh"))
 	 {
 		 QTextStream *pCVSStream = nullptr;
 		 if (ExportMaterialPropertiesCSV)
@@ -151,55 +151,20 @@ void DzUnrealAction::WriteConfiguration()
 		 writeAllMorphs(writer);
 		 writeAllSubdivisions(writer);
 		 writeAllDForceInfo(Selection, writer);
-
-		 if (AssetType == "SkeletalMesh")
-		 {
-			 bool ExportDForce = true;
-			 writer.startMemberArray("dForce WeightMaps", true);
-			 if (ExportDForce)
-			 {
-				 WriteWeightMaps(Selection, writer);
-			 }
-			 writer.finishArray();
-		 }
 	 }
 
 	 if (AssetType == "Pose")
 	 {
-		 writer.startMemberArray("Poses", true);
-
-		for (QList<QString>::iterator i = PoseList.begin(); i != PoseList.end(); ++i)
-		{
-			writer.startObject(true);
-			writer.addMember("Name", *i);
-			writer.addMember("Label", MorphMapping[*i]);
-			writer.finishObject();
-		}
-
-		 writer.finishArray();
-
+		writeAllPoses(writer);
 	 }
 
 	 if (AssetType == "Environment")
 	 {
-		 writer.startMemberArray("Instances", true);
-		 QMap<QString, DzMatrix3> WritingInstances;
-		 QList<DzGeometry*> ExportedGeometry;
-		 WriteInstances(Selection, writer, WritingInstances, ExportedGeometry);
-		 writer.finishArray();
+		 writeEnvironment(writer);
 	 }
 
 	 writer.finishObject();
-
 	 DTUfile.close();
-
-	 if (AssetType != "Environment" && ExportSubdivisions)
-	 {
-		 QString CMD = "ImportFBXScene " + DTUfilename;
-		 QByteArray array = CMD.toLocal8Bit();
-		 char* cmd = array.data();
-		 int res = system(cmd);
-	 }
 
 	 // Send a message to Unreal telling it to start an import
 	 QUdpSocket* sendSocket = new QUdpSocket(this);
@@ -213,64 +178,6 @@ void DzUnrealAction::WriteConfiguration()
 void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
 {
 
-}
-
-void DzUnrealAction::WriteInstances(DzNode* Node, DzJsonWriter& Writer, QMap<QString, DzMatrix3>& WritenInstances, QList<DzGeometry*>& ExportedGeometry, QUuid ParentID)
-{
-	DzObject* Object = Node->getObject();
-	DzShape* Shape = Object ? Object->getCurrentShape() : NULL;
-	DzGeometry* Geometry = Shape ? Shape->getGeometry() : NULL;
-	DzBone* Bone = qobject_cast<DzBone*>(Node);
-
-	if (Bone == nullptr && Geometry)
-	{
-		ExportedGeometry.append(Geometry);
-		ParentID = WriteInstance(Node, Writer, ParentID);
-	}
-
-	for (int ChildIndex = 0; ChildIndex < Node->getNumNodeChildren(); ChildIndex++)
-	{
-		DzNode* ChildNode = Node->getNodeChild(ChildIndex);
-		WriteInstances(ChildNode, Writer, WritenInstances, ExportedGeometry, ParentID);
-	}
-}
-
-QUuid DzUnrealAction::WriteInstance(DzNode* Node, DzJsonWriter& Writer, QUuid ParentID)
-{
-	QString Path = Node->getAssetFileInfo().getUri().getFilePath();
-	QFile File(Path);
-	QString FileName = File.fileName();
-	QStringList Items = FileName.split("/");
-	QStringList Parts = Items[Items.count() - 1].split(".");
-	QString AssetID = Node->getAssetUri().getId();
-	QString Name = AssetID.remove(QRegExp("[^A-Za-z0-9_]"));
-	QUuid Uid = QUuid::createUuid();
-
-	Writer.startObject(true);
-	Writer.addMember("Version", 1);
-	Writer.addMember("InstanceLabel", Node->getLabel());
-	Writer.addMember("InstanceAsset", Name);
-	Writer.addMember("ParentID", ParentID.toString());
-	Writer.addMember("Guid", Uid.toString());
-	Writer.addMember("TranslationX", Node->getWSPos().m_x);
-	Writer.addMember("TranslationY", Node->getWSPos().m_y);
-	Writer.addMember("TranslationZ", Node->getWSPos().m_z);
-
-	DzQuat RotationQuat = Node->getWSRot();
-	DzVec3 Rotation;
-	RotationQuat.getValue(Node->getRotationOrder(), Rotation);
-	Writer.addMember("RotationX", Rotation.m_x);
-	Writer.addMember("RotationY", Rotation.m_y);
-	Writer.addMember("RotationZ", Rotation.m_z);
-
-	DzMatrix3 Scale = Node->getWSScale();
-
-	Writer.addMember("ScaleX", Scale.row(0).length());
-	Writer.addMember("ScaleY", Scale.row(1).length());
-	Writer.addMember("ScaleZ", Scale.row(2).length());
-	Writer.finishObject();
-
-	return Uid;
 }
 
 // Overrides baseclass implementation with Unreal specific resets
