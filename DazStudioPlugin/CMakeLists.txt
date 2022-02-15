@@ -2,7 +2,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(DZ_PLUGIN_TGT_NAME dzunrealbridge)
-set(DZ_PLUGIN_PROJECT_NAME "DzUnrealBridge")
+set(DZ_PLUGIN_PROJECT_NAME "DzBridge-Unreal")
 
 # if building a plugin and you want the compiled result placed in the Daz Studio ./plugins directory
 if(DAZ_STUDIO_EXE_DIR)

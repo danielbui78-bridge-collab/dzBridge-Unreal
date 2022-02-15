@@ -8,7 +8,7 @@
 #include "DzBridgeSubdivisionDialog.h"
 
 #ifdef __APPLE__
-DZ_PLUGIN_DEFINITION("DazToUnreal");
+DZ_PLUGIN_DEFINITION("Daz To Unreal Bridge");
 #else
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, ULONG fdwReason, LPVOID lpvReserved)
 {
@@ -24,7 +24,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, ULONG fdwReason, LPVOID lpvReserved)
 	}
 	return TRUE;
 }
-static DzPlugin s_pluginDef("DazToUnreal");
+static DzPlugin s_pluginDef("Daz To Unreal Bridge");
 extern "C" __declspec(dllexport) DzVersion getSDKVersion() { return DZ_SDK_VERSION; }
 extern "C" __declspec(dllexport) DzPlugin * getPluginDefinition() { return &s_pluginDef; }
 #endif
