@@ -220,4 +220,17 @@ bool DzUnrealAction::setBridgeDialog(DzBasicDialog* arg_dlg)
 	return true;
 }
 
+QString DzUnrealAction::readGUIRootFolder()
+{
+	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
+
+	if (BridgeDialog)
+	{
+		QLineEdit* intermediateFolderEdit = BridgeDialog->getIntermediateFolderEdit();
+		if (intermediateFolderEdit)
+			rootFolder = intermediateFolderEdit->text().replace("\\", "/");
+	}
+	return rootFolder;
+}
+
 #include "moc_DzUnrealAction.cpp"

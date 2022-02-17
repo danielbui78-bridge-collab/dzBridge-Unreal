@@ -21,6 +21,7 @@ public:
 	 Q_INVOKABLE bool setBridgeDialog(DzBasicDialog* arg_dlg);
 
 	 Q_INVOKABLE void resetToDefaults();
+	 QString readGUIRootFolder();
 
 protected:
 	 int Port;
