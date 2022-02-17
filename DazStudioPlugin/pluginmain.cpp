@@ -64,3 +64,13 @@ QObject* DzUnrealDialogFactory::createInstance() const
 {
 	return (QObject*) new DzUnrealDialog(nullptr);
 }
+
+#ifdef UNITTEST_DZBRIDGE
+
+#include "UnitTest_DzUnrealAction.h"
+#include "UnitTest_DzUnrealDialog.h"
+
+DZ_PLUGIN_CLASS_GUID(UnitTest_DzUnrealAction, a56200a2-165d-4256-bf58-76f14877873b);
+DZ_PLUGIN_CLASS_GUID(UnitTest_DzUnrealDialog, 20040432-2662-488c-9b23-e50c09d6dc67);
+
+#endif
