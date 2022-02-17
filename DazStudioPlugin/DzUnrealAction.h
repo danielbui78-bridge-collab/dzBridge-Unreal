@@ -7,17 +7,17 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qtextstream.h>
 #include <QUuid.h>
-#include <DzRuntimePluginAction.h>
+#include <DzBridgeAction.h>
 
 class DzUnrealDialog;
 
-class DzUnrealAction : public DzRuntimePluginAction {
+class DzUnrealAction : public DzBridgeAction {
 	Q_OBJECT
-	Q_PROPERTY(DzBasicDialog* wBridgeDialog READ getBridgeDialog WRITE setBridgeDialog)
+//	Q_PROPERTY(DzBasicDialog* wBridgeDialog READ getBridgeDialog WRITE setBridgeDialog)
 public:
 	 DzUnrealAction();
 
-	 Q_INVOKABLE DzUnrealDialog* getBridgeDialog() { return BridgeDialog; }
+//	 Q_INVOKABLE DzUnrealDialog* getBridgeDialog() { return BridgeDialog; }
 	 Q_INVOKABLE bool setBridgeDialog(DzBasicDialog* arg_dlg);
 
 	 Q_INVOKABLE void resetToDefaults();
@@ -25,7 +25,7 @@ public:
 
 protected:
 	 int Port;
-	 DzUnrealDialog *BridgeDialog;
+//	 DzUnrealDialog *BridgeDialog;
 
 	 void executeAction();
 	 Q_INVOKABLE void WriteConfiguration();

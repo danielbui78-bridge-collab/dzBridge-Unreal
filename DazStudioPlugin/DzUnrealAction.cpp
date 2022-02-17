@@ -23,15 +23,16 @@
 #include "idzsceneasset.h"
 #include "dzuri.h"
 
-#include "DzUnrealDialog.h"
 #include "DzUnrealAction.h"
+#include "DzUnrealDialog.h"
 #include "DzBridgeMorphSelectionDialog.h"
+#include "DzBridgeSubdivisionDialog.h"
 
 DzUnrealAction::DzUnrealAction() :
-	 DzRuntimePluginAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
+	 DzBridgeAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
 {
 	 Port = 0;
-	 BridgeDialog = nullptr;
+//	 m_bridgeDialog = nullptr;
      NonInteractiveMode = 0;
 	 AssetType = QString("SkeletalMesh");
 	 //Setup Icon
@@ -73,15 +74,15 @@ void DzUnrealAction::executeAction()
     }
 
     // Create the dialog
-	if (BridgeDialog == nullptr)
+	if (m_bridgeDialog == nullptr)
 	{
-		BridgeDialog = new DzUnrealDialog(mw);
+		m_bridgeDialog = new DzUnrealDialog(mw);
 	}
 
 	// Prepare member variables when not using GUI
 	if (NonInteractiveMode == 1)
 	{
-		if (RootFolder != "") BridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
+//		if (RootFolder != "") m_bridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
 
 		if (ScriptOnly_MorphList.isEmpty() == false)
 		{
@@ -90,7 +91,7 @@ void DzUnrealAction::executeAction()
 			MorphString += "\n1\n.CTRLVS\n2\nAnything\n0";
 			if (m_morphSelectionDialog == nullptr)
 			{
-				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(BridgeDialog);
+				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(m_bridgeDialog);
 			}
 			MorphMapping.clear();
 			foreach(QString morphName, ScriptOnly_MorphList)
@@ -112,15 +113,19 @@ void DzUnrealAction::executeAction()
     int dialog_choice = -1;
 	if (NonInteractiveMode == 0)
 	{
-		dialog_choice = BridgeDialog->exec();
+		dialog_choice = m_bridgeDialog->exec();
 	}
     if (NonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
     {
 		// Read in Custom GUI values
-		Port = BridgeDialog->getPortEdit()->text().toInt();
-		ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
+		DzUnrealDialog* unrealDialog = qobject_cast<DzUnrealDialog*>(m_bridgeDialog);
+		if (unrealDialog)
+		{
+			Port = unrealDialog->getPortEdit()->text().toInt();
+			ExportMaterialPropertiesCSV = unrealDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
+		}
 		// Read in Common GUI values
-		readGUI(BridgeDialog);
+		readGUI(m_bridgeDialog);
 
 		exportHD();
     }
@@ -184,15 +189,15 @@ void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
 // Resets Default Values but Ignores any saved settings
 void DzUnrealAction::resetToDefaults()
 {
-	DzRuntimePluginAction::resetToDefaults();
+	DzBridgeAction::resetToDefaults();
 
-	// Must Instantiate BridgeDialog so that we can override any saved states
-	if (BridgeDialog == nullptr)
+	// Must Instantiate m_bridgeDialog so that we can override any saved states
+	if (m_bridgeDialog == nullptr)
 	{
 		DzMainWindow* mw = dzApp->getInterface();
-		BridgeDialog = new DzUnrealDialog(mw);
+		m_bridgeDialog = new DzUnrealDialog(mw);
 	}
-	BridgeDialog->resetToDefaults();
+	m_bridgeDialog->resetToDefaults();
 
 	if (m_subdivisionDialog != nullptr)
 	{
@@ -210,9 +215,9 @@ void DzUnrealAction::resetToDefaults()
 
 bool DzUnrealAction::setBridgeDialog(DzBasicDialog* arg_dlg) 
 {
-	BridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); 
+	m_bridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); 
 
-	if (BridgeDialog == nullptr && arg_dlg != nullptr)
+	if (m_bridgeDialog == nullptr && arg_dlg != nullptr)
 	{
 		return false;
 	}
@@ -224,9 +229,14 @@ QString DzUnrealAction::readGUIRootFolder()
 {
 	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
 
-	if (BridgeDialog)
+	if (m_bridgeDialog)
 	{
-		QLineEdit* intermediateFolderEdit = BridgeDialog->getIntermediateFolderEdit();
+		QLineEdit* intermediateFolderEdit = nullptr;
+		DzUnrealDialog* unrealDialog = qobject_cast<DzUnrealDialog*>(m_bridgeDialog);
+
+		if (unrealDialog)
+			intermediateFolderEdit = unrealDialog->getIntermediateFolderEdit();
+
 		if (intermediateFolderEdit)
 			rootFolder = intermediateFolderEdit->text().replace("\\", "/");
 	}
