@@ -125,7 +125,7 @@ void DzUnrealAction::executeAction()
 			ExportMaterialPropertiesCSV = unrealDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
 		}
 		// Read in Common GUI values
-		readGUI(m_bridgeDialog);
+		readGui(m_bridgeDialog);
 
 		exportHD();
     }
