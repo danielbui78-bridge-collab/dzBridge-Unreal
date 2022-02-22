@@ -28,7 +28,7 @@ protected:
 //	 DzUnrealDialog *BridgeDialog;
 
 	 void executeAction();
-	 Q_INVOKABLE void WriteConfiguration();
-	 void SetExportOptions(DzFileIOSettings& ExportOptions);
+	 Q_INVOKABLE void writeConfiguration();
+	 void setExportOptions(DzFileIOSettings& ExportOptions);
 
 };

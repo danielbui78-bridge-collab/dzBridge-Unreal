@@ -131,7 +131,7 @@ void DzUnrealAction::executeAction()
     }
 }
 
-void DzUnrealAction::WriteConfiguration()
+void DzUnrealAction::writeConfiguration()
 {
 	 QString DTUfilename = DestinationPath + CharacterName + ".dtu";
 	 QFile DTUfile(DTUfilename);
@@ -155,7 +155,7 @@ void DzUnrealAction::WriteConfiguration()
 		 writeAllMaterials(Selection, writer, pCVSStream);
 		 writeAllMorphs(writer);
 		 writeAllSubdivisions(writer);
-		 writeAllDForceInfo(Selection, writer);
+		 writeAllDforceInfo(Selection, writer);
 	 }
 
 	 if (AssetType == "Pose")
@@ -180,7 +180,7 @@ void DzUnrealAction::WriteConfiguration()
 }
 
 // Setup custom FBX export options
-void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
+void DzUnrealAction::setExportOptions(DzFileIOSettings& ExportOptions)
 {
 
 }
