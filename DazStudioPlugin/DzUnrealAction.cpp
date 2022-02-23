@@ -225,7 +225,7 @@ bool DzUnrealAction::setBridgeDialog(DzBasicDialog* arg_dlg)
 	return true;
 }
 
-QString DzUnrealAction::readGUIRootFolder()
+QString DzUnrealAction::readGuiRootFolder()
 {
 	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
 

@@ -10,6 +10,7 @@
 #include <DzBridgeAction.h>
 
 class DzUnrealDialog;
+class UnitTest_DzUnrealAction;
 
 class DzUnrealAction : public DzBridgeAction {
 	Q_OBJECT
@@ -21,7 +22,7 @@ public:
 	 Q_INVOKABLE bool setBridgeDialog(DzBasicDialog* arg_dlg);
 
 	 Q_INVOKABLE void resetToDefaults();
-	 QString readGUIRootFolder();
+	 QString readGuiRootFolder();
 
 protected:
 	 int Port;
@@ -30,5 +31,9 @@ protected:
 	 void executeAction();
 	 Q_INVOKABLE void writeConfiguration();
 	 void setExportOptions(DzFileIOSettings& ExportOptions);
+
+#ifdef UNITTEST_DZBRIDGE
+	 friend class UnitTest_DzUnrealAction;
+#endif
 
 };

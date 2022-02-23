@@ -40,4 +40,8 @@ protected:
 	QPushButton* intermediateFolderButton;
 	QCheckBox* exportMaterialPropertyCSVCheckBox;
 
+#ifdef UNITTEST_DZBRIDGE
+	friend class UnitTest_DzUnrealDialog;
+#endif
+
 };
