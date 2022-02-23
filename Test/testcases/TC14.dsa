@@ -10,7 +10,7 @@ function Run_TestCase_14(sTestAsset)
     sComponentName = "";
     arrayMorphList = [];
 
-    print("Running Test Case 14:");
+    printToLog("Running Test Case 14:");
 
     // start with clean Daz Studio scene (TC14.1)
      Scene.clear();
@@ -31,7 +31,7 @@ function Run_TestCase_14(sTestAsset)
         return false;
     }
 
-    print("Exported DTU = " + sDtuFilename);
+    printToLog("Exported DTU = " + sDtuFilename);
     if (Validate_DTU_file(sDtuFilename) == false)
     {
         return false;
@@ -39,7 +39,7 @@ function Run_TestCase_14(sTestAsset)
 
     var sFbxFilename = sDtuFilename;
     sFbxFilename = sFbxFilename.replace(".dtu",".fbx");
-    print("Exported DTU = " + sFbxFilename);
+    printToLog("Exported FBX = " + sFbxFilename);
 
     if (Validate_FBX_file(sFbxFilename) == false)
     {
