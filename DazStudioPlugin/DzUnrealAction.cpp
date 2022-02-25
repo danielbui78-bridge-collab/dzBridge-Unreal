@@ -32,10 +32,10 @@
 DzUnrealAction::DzUnrealAction() :
 	 DzBridgeAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
 {
-	 Port = 0;
+	 m_nPort = 0;
 //	 m_bridgeDialog = nullptr;
-     NonInteractiveMode = 0;
-	 AssetType = QString("SkeletalMesh");
+     m_nNonInteractiveMode = 0;
+	 m_sAssetType = QString("SkeletalMesh");
 	 //Setup Icon
 	 QString iconName = "icon";
 	 QPixmap basePixmap = QPixmap::fromImage(getEmbeddedImage(iconName.toLatin1()));
@@ -53,7 +53,7 @@ void DzUnrealAction::executeAction()
 	 DzMainWindow* mw = dzApp->getInterface();
 	 if (!mw)
 	 {
-         if (NonInteractiveMode == 0) 
+         if (m_nNonInteractiveMode == 0) 
 		 {
              QMessageBox::warning(0, tr("Error"),
                  tr("The main window has not been created yet."), QMessageBox::Ok);
@@ -66,7 +66,7 @@ void DzUnrealAction::executeAction()
 	 // input from the user.
     if (dzScene->getNumSelectedNodes() != 1)
     {
-        if (NonInteractiveMode == 0) 
+        if (m_nNonInteractiveMode == 0) 
 		{
             QMessageBox::warning(0, tr("Error"),
                 tr("Please select one Character or Prop to send."), QMessageBox::Ok);
@@ -89,49 +89,51 @@ void DzUnrealAction::executeAction()
 	}
 
 	// Prepare member variables when not using GUI
-	if (NonInteractiveMode == 1)
+	if (m_nNonInteractiveMode == 1)
 	{
-//		if (RootFolder != "") m_bridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
+//		if (m_sRootFolder != "") m_bridgeDialog->getIntermediateFolderEdit()->setText(m_sRootFolder);
 
-		if (ScriptOnly_MorphList.isEmpty() == false)
+		if (m_aMorphListOverride.isEmpty() == false)
 		{
-			ExportMorphs = true;
-			MorphString = ScriptOnly_MorphList.join("\n1\n");
-			MorphString += "\n1\n.CTRLVS\n2\nAnything\n0";
+			m_bEnableMorphs = true;
+			m_sMorphSelectionRule = m_aMorphListOverride.join("\n1\n");
+			m_sMorphSelectionRule += "\n1\n.CTRLVS\n2\nAnything\n0";
 			if (m_morphSelectionDialog == nullptr)
 			{
 				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(m_bridgeDialog);
 			}
-			MorphMapping.clear();
-			foreach(QString morphName, ScriptOnly_MorphList)
+			m_mMorphNameToLabel.clear();
+			foreach(QString morphName, m_aMorphListOverride)
 			{
 				QString label = m_morphSelectionDialog->GetMorphLabelFromName(morphName);
-				MorphMapping.insert(morphName, label);
+				m_mMorphNameToLabel.insert(morphName, label);
 			}
 		}
 		else
 		{
-			ExportMorphs = false;
-			MorphString = "";
-			MorphMapping.clear();
+			m_bEnableMorphs = false;
+			m_sMorphSelectionRule = "";
+			m_mMorphNameToLabel.clear();
 		}
 
 	}
 
     // If the Accept button was pressed, start the export
     int dialog_choice = -1;
-	if (NonInteractiveMode == 0)
+	if (m_nNonInteractiveMode == 0)
 	{
 		dialog_choice = m_bridgeDialog->exec();
 	}
-    if (NonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
+    if (m_nNonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
     {
+		DzProgress* exportProgress = new DzProgress("Sending to Unreal...", 10);
+
 		// Read in Custom GUI values
 		DzUnrealDialog* unrealDialog = qobject_cast<DzUnrealDialog*>(m_bridgeDialog);
 		if (unrealDialog)
 		{
-			Port = unrealDialog->getPortEdit()->text().toInt();
-			ExportMaterialPropertiesCSV = unrealDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
+			m_nPort = unrealDialog->getPortEdit()->text().toInt();
+			m_bExportMaterialPropertiesCSV = unrealDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
 		}
 		// Read in Common GUI values
 		readGui(m_bridgeDialog);
@@ -151,7 +153,7 @@ void DzUnrealAction::executeAction()
 
 void DzUnrealAction::writeConfiguration()
 {
-	 QString DTUfilename = DestinationPath + CharacterName + ".dtu";
+	 QString DTUfilename = m_sDestinationPath + m_sAssetName + ".dtu";
 	 QFile DTUfile(DTUfilename);
 	 DTUfile.open(QIODevice::WriteOnly);
 	 DzJsonWriter writer(&DTUfile);
@@ -159,29 +161,29 @@ void DzUnrealAction::writeConfiguration()
 
 	 writeDTUHeader(writer);
 
-	 if (AssetType.toLower().contains("mesh"))
+	 if (m_sAssetType.toLower().contains("mesh"))
 	 {
 		 QTextStream *pCVSStream = nullptr;
-		 if (ExportMaterialPropertiesCSV)
+		 if (m_bExportMaterialPropertiesCSV)
 		 {
-			 QString filename = DestinationPath + CharacterName + "_Maps.csv";
+			 QString filename = m_sDestinationPath + m_sAssetName + "_Maps.csv";
 			 QFile file(filename);
 			 file.open(QIODevice::WriteOnly);
 			 pCVSStream = new QTextStream(&file);
 			 *pCVSStream << "Version, Object, Material, Type, Color, Opacity, File" << endl;
 		 }
-		 writeAllMaterials(Selection, writer, pCVSStream);
+		 writeAllMaterials(m_pSelectedNode, writer, pCVSStream);
 		 writeAllMorphs(writer);
 		 writeAllSubdivisions(writer);
-		 writeAllDforceInfo(Selection, writer);
+		 writeAllDforceInfo(m_pSelectedNode, writer);
 	 }
 
-	 if (AssetType == "Pose")
+	 if (m_sAssetType == "Pose")
 	 {
 		writeAllPoses(writer);
 	 }
 
-	 if (AssetType == "Environment")
+	 if (m_sAssetType == "Environment")
 	 {
 		 writeEnvironment(writer);
 	 }
@@ -193,7 +195,7 @@ void DzUnrealAction::writeConfiguration()
 	 QUdpSocket* sendSocket = new QUdpSocket(this);
 	 QHostAddress* sendAddress = new QHostAddress("127.0.0.1");
 
-	 sendSocket->connectToHost(*sendAddress, Port);
+	 sendSocket->connectToHost(*sendAddress, m_nPort);
 	 sendSocket->write(DTUfilename.toUtf8());
 }
 
