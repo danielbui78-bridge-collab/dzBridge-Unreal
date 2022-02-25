@@ -33,7 +33,6 @@ DzUnrealAction::DzUnrealAction() :
 	 DzBridgeAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
 {
 	 m_nPort = 0;
-//	 m_bridgeDialog = nullptr;
      m_nNonInteractiveMode = 0;
 	 m_sAssetType = QString("SkeletalMesh");
 	 //Setup Icon
