@@ -22,6 +22,7 @@
 //#include <dznodeinstance.h>
 #include "idzsceneasset.h"
 #include "dzuri.h"
+#include "dzprogress.h"
 
 #include "DzUnrealAction.h"
 #include "DzUnrealDialog.h"
@@ -78,6 +79,14 @@ void DzUnrealAction::executeAction()
 	{
 		m_bridgeDialog = new DzUnrealDialog(mw);
 	}
+	else
+	{
+		if (m_nNonInteractiveMode == 0)
+		{
+			m_bridgeDialog->resetToDefaults();
+			m_bridgeDialog->loadSavedSettings();
+		}
+	}
 
 	// Prepare member variables when not using GUI
 	if (NonInteractiveMode == 1)
@@ -127,7 +136,16 @@ void DzUnrealAction::executeAction()
 		// Read in Common GUI values
 		readGui(m_bridgeDialog);
 
-		exportHD();
+		exportHD(exportProgress);
+
+		exportProgress->finish();
+
+		// DB 2021-09-02: messagebox "Export Complete"
+		if (m_nNonInteractiveMode == 0)
+		{
+			QMessageBox::information(0, "DazBridge: Unreal",
+				tr("Export phase from Daz Studio complete. Please switch to Unreal to continue with Import phase."), QMessageBox::Ok);
+		}
     }
 }
 
