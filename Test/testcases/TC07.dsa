@@ -62,6 +62,8 @@ function Run_TestCase_07(sTestAsset)
     var sReturnString = Run_Exporter2(oBridge, sExportFilename, sAssetType, sRootFolder, sExportFolder, sProductName, sComponentName, arrayMorphList);
     var sDtuFilename = sReturnString;
 
+    wBridgeDialog.wSubdivisionEnabledCheckBox.setChecked(false);
+
     // check for expected root folder, export folder and export filename
     if (sDtuFilename.lower().find("/documents/daztounreal/tc07/genesis81female.dtu") == -1)
     {
