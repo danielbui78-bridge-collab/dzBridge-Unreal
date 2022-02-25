@@ -23,7 +23,7 @@
 #include "dzaction.h"
 #include "dzskeleton.h"
 
-#include "DzRuntimePluginAction.h"
+#include "DzBridgeAction.h"
 #include "DzUnrealDialog.h"
 #include "DzBridgeMorphSelectionDialog.h"
 #include "DzBridgeSubdivisionDialog.h"
@@ -145,14 +145,6 @@ void DzUnrealDialog::HandlePortChanged(const QString& port)
 {
 	if (settings == nullptr) return;
 	settings->setValue("Port", port);
-}
-
-QString DzUnrealDialog::getRootFolder()
-{
-	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
-	if (intermediateFolderEdit)
-		rootFolder = intermediateFolderEdit->text().replace("\\","/");
-	return rootFolder;
 }
 
 #include "moc_DzUnrealDialog.cpp"

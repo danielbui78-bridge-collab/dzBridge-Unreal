@@ -34,6 +34,7 @@ function main()
 	
 	clearLog();
 	var i=0;
+/*	
 	aTCResults[i] = logToJson("TC01", Run_TestCase_01("/people/genesis 8 female/genesis 8 basic female.duf"));
 	i++;
 	aTCResults[i] = logToJson("TC02", Run_TestCase_02("/people/genesis 8 female/genesis 8.1 basic female.duf"));
@@ -66,15 +67,15 @@ function main()
 	aTCResults[i] = logToJson("TC15", Run_TestCase_15("people/genesis 2 female/genesis 2 base female.duf"));
 	i++;
 	aTCResults[i] = logToJson("TC16", Run_TestCase_16("people/genesis 2 male/genesis 2 base male.duf"));
-	i++;
-	aTCResults[i] = logToJson("TC17", Run_TestCase_17("/Environments/Architecture/MS_DriveIn/Scenes/!Pre_DriveIn.duf"));
-	i++;
-	aTCResults[i] = logToJson("TC18", Run_TestCase_18());
-	i++;
-	aTCResults[i] = logToJson("TC19", Run_TestCase_19());
-	i++;
-	aTCResults[i] = logToJson("TC20", Run_TestCase_20());
-	
+*/
+
+	aTCResults[0] = logToJson("TC01", Run_TestCase_01("/people/genesis 8 female/genesis 8 basic female.duf"));
+//	aTCResults[6] = logToJson("TC07", Run_TestCase_07("/people/genesis 8 female/genesis 8.1 basic female.duf"));
+//	aTCResults[16] = logToJson("TC17", Run_TestCase_17("/Environments/Architecture/MS_DriveIn/Scenes/!Pre_DriveIn.duf"));
+//	aTCResults[17] = logToJson("TC18", Run_TestCase_18());
+//	aTCResults[18] = logToJson("TC19", Run_TestCase_19());
+//	aTCResults[19] = logToJson("TC20", Run_TestCase_20());
+		
 	printToLog("\n");
 	printToLog("=======================");
 	printToLog("Automated Test Results:");

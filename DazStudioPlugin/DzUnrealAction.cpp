@@ -22,18 +22,19 @@
 //#include <dznodeinstance.h>
 #include "idzsceneasset.h"
 #include "dzuri.h"
+#include "dzprogress.h"
 
-#include "DzUnrealDialog.h"
 #include "DzUnrealAction.h"
+#include "DzUnrealDialog.h"
 #include "DzBridgeMorphSelectionDialog.h"
+#include "DzBridgeSubdivisionDialog.h"
 
 DzUnrealAction::DzUnrealAction() :
-	 DzRuntimePluginAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
+	 DzBridgeAction(tr("&Daz to Unreal"), tr("Send the selected node to Unreal."))
 {
-	 Port = 0;
-	 BridgeDialog = nullptr;
-     NonInteractiveMode = 0;
-	 AssetType = QString("SkeletalMesh");
+	 m_nPort = 0;
+     m_nNonInteractiveMode = 0;
+	 m_sAssetType = QString("SkeletalMesh");
 	 //Setup Icon
 	 QString iconName = "icon";
 	 QPixmap basePixmap = QPixmap::fromImage(getEmbeddedImage(iconName.toLatin1()));
@@ -51,7 +52,7 @@ void DzUnrealAction::executeAction()
 	 DzMainWindow* mw = dzApp->getInterface();
 	 if (!mw)
 	 {
-         if (NonInteractiveMode == 0) 
+         if (m_nNonInteractiveMode == 0) 
 		 {
              QMessageBox::warning(0, tr("Error"),
                  tr("The main window has not been created yet."), QMessageBox::Ok);
@@ -64,7 +65,7 @@ void DzUnrealAction::executeAction()
 	 // input from the user.
     if (dzScene->getNumSelectedNodes() != 1)
     {
-        if (NonInteractiveMode == 0) 
+        if (m_nNonInteractiveMode == 0) 
 		{
             QMessageBox::warning(0, tr("Error"),
                 tr("Please select one Character or Prop to send."), QMessageBox::Ok);
@@ -73,62 +74,85 @@ void DzUnrealAction::executeAction()
     }
 
     // Create the dialog
-	if (BridgeDialog == nullptr)
+	if (m_bridgeDialog == nullptr)
 	{
-		BridgeDialog = new DzUnrealDialog(mw);
+		m_bridgeDialog = new DzUnrealDialog(mw);
+	}
+	else
+	{
+		if (m_nNonInteractiveMode == 0)
+		{
+			m_bridgeDialog->resetToDefaults();
+			m_bridgeDialog->loadSavedSettings();
+		}
 	}
 
 	// Prepare member variables when not using GUI
-	if (NonInteractiveMode == 1)
+	if (m_nNonInteractiveMode == 1)
 	{
-		if (RootFolder != "") BridgeDialog->getIntermediateFolderEdit()->setText(RootFolder);
+//		if (m_sRootFolder != "") m_bridgeDialog->getIntermediateFolderEdit()->setText(m_sRootFolder);
 
-		if (ScriptOnly_MorphList.isEmpty() == false)
+		if (m_aMorphListOverride.isEmpty() == false)
 		{
-			ExportMorphs = true;
-			MorphString = ScriptOnly_MorphList.join("\n1\n");
-			MorphString += "\n1\n.CTRLVS\n2\nAnything\n0";
+			m_bEnableMorphs = true;
+			m_sMorphSelectionRule = m_aMorphListOverride.join("\n1\n");
+			m_sMorphSelectionRule += "\n1\n.CTRLVS\n2\nAnything\n0";
 			if (m_morphSelectionDialog == nullptr)
 			{
-				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(BridgeDialog);
+				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(m_bridgeDialog);
 			}
-			MorphMapping.clear();
-			foreach(QString morphName, ScriptOnly_MorphList)
+			m_mMorphNameToLabel.clear();
+			foreach(QString morphName, m_aMorphListOverride)
 			{
 				QString label = m_morphSelectionDialog->GetMorphLabelFromName(morphName);
-				MorphMapping.insert(morphName, label);
+				m_mMorphNameToLabel.insert(morphName, label);
 			}
 		}
 		else
 		{
-			ExportMorphs = false;
-			MorphString = "";
-			MorphMapping.clear();
+			m_bEnableMorphs = false;
+			m_sMorphSelectionRule = "";
+			m_mMorphNameToLabel.clear();
 		}
 
 	}
 
     // If the Accept button was pressed, start the export
     int dialog_choice = -1;
-	if (NonInteractiveMode == 0)
+	if (m_nNonInteractiveMode == 0)
 	{
-		dialog_choice = BridgeDialog->exec();
+		dialog_choice = m_bridgeDialog->exec();
 	}
-    if (NonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
+    if (m_nNonInteractiveMode == 1 || dialog_choice == QDialog::Accepted)
     {
-		// Read in Custom GUI values
-		Port = BridgeDialog->getPortEdit()->text().toInt();
-		ExportMaterialPropertiesCSV = BridgeDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
-		// Read in Common GUI values
-		readGUI(BridgeDialog);
+		DzProgress* exportProgress = new DzProgress("Sending to Unreal...", 10);
 
-		exportHD();
+		// Read in Custom GUI values
+		DzUnrealDialog* unrealDialog = qobject_cast<DzUnrealDialog*>(m_bridgeDialog);
+		if (unrealDialog)
+		{
+			m_nPort = unrealDialog->getPortEdit()->text().toInt();
+			m_bExportMaterialPropertiesCSV = unrealDialog->getExportMaterialPropertyCSVCheckBox()->isChecked();
+		}
+		// Read in Common GUI values
+		readGui(m_bridgeDialog);
+
+		exportHD(exportProgress);
+
+		exportProgress->finish();
+
+		// DB 2021-09-02: messagebox "Export Complete"
+		if (m_nNonInteractiveMode == 0)
+		{
+			QMessageBox::information(0, "DazBridge: Unreal",
+				tr("Export phase from Daz Studio complete. Please switch to Unreal to continue with Import phase."), QMessageBox::Ok);
+		}
     }
 }
 
-void DzUnrealAction::WriteConfiguration()
+void DzUnrealAction::writeConfiguration()
 {
-	 QString DTUfilename = DestinationPath + CharacterName + ".dtu";
+	 QString DTUfilename = m_sDestinationPath + m_sAssetName + ".dtu";
 	 QFile DTUfile(DTUfilename);
 	 DTUfile.open(QIODevice::WriteOnly);
 	 DzJsonWriter writer(&DTUfile);
@@ -136,29 +160,29 @@ void DzUnrealAction::WriteConfiguration()
 
 	 writeDTUHeader(writer);
 
-	 if (AssetType.toLower().contains("mesh"))
+	 if (m_sAssetType.toLower().contains("mesh"))
 	 {
 		 QTextStream *pCVSStream = nullptr;
-		 if (ExportMaterialPropertiesCSV)
+		 if (m_bExportMaterialPropertiesCSV)
 		 {
-			 QString filename = DestinationPath + CharacterName + "_Maps.csv";
+			 QString filename = m_sDestinationPath + m_sAssetName + "_Maps.csv";
 			 QFile file(filename);
 			 file.open(QIODevice::WriteOnly);
 			 pCVSStream = new QTextStream(&file);
 			 *pCVSStream << "Version, Object, Material, Type, Color, Opacity, File" << endl;
 		 }
-		 writeAllMaterials(Selection, writer, pCVSStream);
+		 writeAllMaterials(m_pSelectedNode, writer, pCVSStream);
 		 writeAllMorphs(writer);
 		 writeAllSubdivisions(writer);
-		 writeAllDForceInfo(Selection, writer);
+		 writeAllDforceInfo(m_pSelectedNode, writer);
 	 }
 
-	 if (AssetType == "Pose")
+	 if (m_sAssetType == "Pose")
 	 {
 		writeAllPoses(writer);
 	 }
 
-	 if (AssetType == "Environment")
+	 if (m_sAssetType == "Environment")
 	 {
 		 writeEnvironment(writer);
 	 }
@@ -170,12 +194,12 @@ void DzUnrealAction::WriteConfiguration()
 	 QUdpSocket* sendSocket = new QUdpSocket(this);
 	 QHostAddress* sendAddress = new QHostAddress("127.0.0.1");
 
-	 sendSocket->connectToHost(*sendAddress, Port);
+	 sendSocket->connectToHost(*sendAddress, m_nPort);
 	 sendSocket->write(DTUfilename.toUtf8());
 }
 
 // Setup custom FBX export options
-void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
+void DzUnrealAction::setExportOptions(DzFileIOSettings& ExportOptions)
 {
 
 }
@@ -184,15 +208,15 @@ void DzUnrealAction::SetExportOptions(DzFileIOSettings& ExportOptions)
 // Resets Default Values but Ignores any saved settings
 void DzUnrealAction::resetToDefaults()
 {
-	DzRuntimePluginAction::resetToDefaults();
+	DzBridgeAction::resetToDefaults();
 
-	// Must Instantiate BridgeDialog so that we can override any saved states
-	if (BridgeDialog == nullptr)
+	// Must Instantiate m_bridgeDialog so that we can override any saved states
+	if (m_bridgeDialog == nullptr)
 	{
 		DzMainWindow* mw = dzApp->getInterface();
-		BridgeDialog = new DzUnrealDialog(mw);
+		m_bridgeDialog = new DzUnrealDialog(mw);
 	}
-	BridgeDialog->resetToDefaults();
+	m_bridgeDialog->resetToDefaults();
 
 	if (m_subdivisionDialog != nullptr)
 	{
@@ -210,14 +234,32 @@ void DzUnrealAction::resetToDefaults()
 
 bool DzUnrealAction::setBridgeDialog(DzBasicDialog* arg_dlg) 
 {
-	BridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); 
+	m_bridgeDialog = qobject_cast<DzUnrealDialog*>(arg_dlg); 
 
-	if (BridgeDialog == nullptr && arg_dlg != nullptr)
+	if (m_bridgeDialog == nullptr && arg_dlg != nullptr)
 	{
 		return false;
 	}
 
 	return true;
+}
+
+QString DzUnrealAction::readGuiRootFolder()
+{
+	QString rootFolder = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + QDir::separator() + "DazToUnreal";
+
+	if (m_bridgeDialog)
+	{
+		QLineEdit* intermediateFolderEdit = nullptr;
+		DzUnrealDialog* unrealDialog = qobject_cast<DzUnrealDialog*>(m_bridgeDialog);
+
+		if (unrealDialog)
+			intermediateFolderEdit = unrealDialog->getIntermediateFolderEdit();
+
+		if (intermediateFolderEdit)
+			rootFolder = intermediateFolderEdit->text().replace("\\", "/");
+	}
+	return rootFolder;
 }
 
 #include "moc_DzUnrealAction.cpp"

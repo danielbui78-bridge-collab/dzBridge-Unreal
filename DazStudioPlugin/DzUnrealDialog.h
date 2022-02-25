@@ -28,7 +28,6 @@ public:
 
 	Q_INVOKABLE void resetToDefaults();
 
-	QString getRootFolder();
 protected slots:
 	void HandleSelectIntermediateFolderButton();
 	void HandlePortChanged(const QString& port);
@@ -40,5 +39,9 @@ protected:
 	QLineEdit* intermediateFolderEdit;
 	QPushButton* intermediateFolderButton;
 	QCheckBox* exportMaterialPropertyCSVCheckBox;
+
+#ifdef UNITTEST_DZBRIDGE
+	friend class UnitTest_DzUnrealDialog;
+#endif
 
 };
