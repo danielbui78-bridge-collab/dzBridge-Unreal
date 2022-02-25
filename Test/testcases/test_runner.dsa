@@ -21,12 +21,16 @@ include(sIncludePath + "TC13.dsa")
 include(sIncludePath + "TC14.dsa")
 include(sIncludePath + "TC15.dsa")
 include(sIncludePath + "TC16.dsa")
+include(sIncludePath + "TC17.dsa")
+include(sIncludePath + "TC18.dsa")
+include(sIncludePath + "TC19b.dsa")
+include(sIncludePath + "TC20.dsa")
 
 include(sIncludePath + "QA_Utility_Functions.dsa")
 
 function main()
 {
-	var aTCResults = new Array(16);
+	var aTCResults = new Array(20);
 	
 	clearLog();
 	var i=0;
@@ -62,7 +66,15 @@ function main()
 	aTCResults[i] = logToJson("TC15", Run_TestCase_15("people/genesis 2 female/genesis 2 base female.duf"));
 	i++;
 	aTCResults[i] = logToJson("TC16", Run_TestCase_16("people/genesis 2 male/genesis 2 base male.duf"));
-
+	i++;
+	aTCResults[i] = logToJson("TC17", Run_TestCase_17("/Environments/Architecture/MS_DriveIn/Scenes/!Pre_DriveIn.duf"));
+	i++;
+	aTCResults[i] = logToJson("TC18", Run_TestCase_18());
+	i++;
+	aTCResults[i] = logToJson("TC19", Run_TestCase_19());
+	i++;
+	aTCResults[i] = logToJson("TC20", Run_TestCase_20());
+	
 	printToLog("\n");
 	printToLog("=======================");
 	printToLog("Automated Test Results:");

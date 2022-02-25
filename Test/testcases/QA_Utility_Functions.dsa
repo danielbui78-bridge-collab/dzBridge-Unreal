@@ -41,7 +41,13 @@ function logToJson(testCase, result)
 		var TestCase = testCase;
         var file = new DzFile(sJsonFile);
         file.open( DzFile.Append);
-        file.write(JSON.stringify({"TestCase ID": TestCase, "Test Result": result, "Test Log":readLogText()}, null, "\t"));
+        file.write(
+        	JSON.stringify({
+        	"TestCase ID": TestCase,
+        	"Test Result": result,
+        	"Time": Date(),
+        	"Test Log":readLogText()
+        	}, null, "\t"));
         file.write("\n");
         file.close();
 		clearLog();
