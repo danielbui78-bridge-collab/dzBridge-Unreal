@@ -12,7 +12,9 @@
 class DzUnrealDialog;
 class UnitTest_DzUnrealAction;
 
-class DzUnrealAction : public DzBridgeAction {
+#include "dzbridge.h"
+
+class DzUnrealAction : public DZ_BRIDGE_NAMESPACE::DzBridgeAction {
 	Q_OBJECT
 public:
 	 DzUnrealAction();
