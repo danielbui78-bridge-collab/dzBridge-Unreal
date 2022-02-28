@@ -99,7 +99,7 @@ void DzUnrealAction::executeAction()
 			m_sMorphSelectionRule += "\n1\n.CTRLVS\n2\nAnything\n0";
 			if (m_morphSelectionDialog == nullptr)
 			{
-				m_morphSelectionDialog = DzBridgeMorphSelectionDialog::Get(m_bridgeDialog);
+				m_morphSelectionDialog = DZ_BRIDGE_NAMESPACE::DzBridgeMorphSelectionDialog::Get(m_bridgeDialog);
 			}
 			m_mMorphNameToLabel.clear();
 			foreach(QString morphName, m_aMorphListOverride)

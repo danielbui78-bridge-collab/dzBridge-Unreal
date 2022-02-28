@@ -10,7 +10,9 @@ class QCheckBox;
 class QComboBox;
 class QGroupBox;
 
-class DzUnrealDialog : public DzBridgeDialog {
+#include "dzbridge.h"
+
+class DzUnrealDialog : public DZ_BRIDGE_NAMESPACE::DzBridgeDialog {
 	Q_OBJECT
 	Q_PROPERTY(QWidget* wIntermediateFolderEdit READ getIntermediateFolderEdit)
 	Q_PROPERTY(QWidget* wPortEdit READ getPortEdit)
