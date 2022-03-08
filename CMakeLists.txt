@@ -19,14 +19,16 @@ cmake_minimum_required(VERSION 3.4.0)
 
 if(APPLE)
 	if(NOT CMAKE_OSX_ARCHITECTURES)
-  		message( FATAL_ERROR "Mac needs CMAKE_OSX_ARCHITECTURES, set to i386 or x86_64" )	
+  		message( FATAL_ERROR "Mac needs CMAKE_OSX_ARCHITECTURES, set to i386 or x86_64" )
 		return()
 	endif()
 endif(APPLE)
 
 project("DzBridge-Unreal")
+set(FBX_SDK_DIR "" CACHE PATH "Path to FBX SDK" )
+set(OPENSUBDIV_DIR "" CACHE PATH "Path to Opensubdiv folder" )
 set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
-#set(USE_DZBRIDGE_STATIC "ON")
+set(USE_DZBRIDGE_STATIC "ON")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -54,7 +56,7 @@ if(WIN32)
 elseif(APPLE)
 	set(DZ_LIB_SUFFIX ".dylib")
 	set(DZ_BIN_SUFFIX ".dylib")
-	set(DZ_LIB_PREFIX "lib")	
+	set(DZ_LIB_PREFIX "lib")
 	set(UTIL_EXT "")
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
 		set(DZ_PLATFORM x86)
@@ -63,15 +65,15 @@ elseif(APPLE)
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
 		set(DZ_PLATFORM x64)
 		set(DZ_MIXED_PLATFORM Mac64)
-		set(DZ_OS_PLATFORM Mac64)	
+		set(DZ_OS_PLATFORM Mac64)
 	else()
-		message(FATAL_ERROR "Unknown architecture")		
+		message(FATAL_ERROR "Unknown architecture")
 	endif()
 	set(CMAKE_MACOSX_RPATH TRUE)
 	set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 	SET(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
 else()
-	message(FATAL_ERROR "Unknown architecture")	
+	message(FATAL_ERROR "Unknown architecture")
 endif(WIN32)
 
 set(DAZ_SDK_DIR_DEFAULT "")
@@ -101,7 +103,7 @@ if(NOT QT_BINARY_DIR_DEFAULT)
 	return()
 endif()
 
-find_package(OpenGL REQUIRED)	
+find_package(OpenGL REQUIRED)
 
 #we only have release libraries for dzcore/qt so make sure even in debug they we use MD and undef debug
 if(WIN32)
@@ -163,39 +165,6 @@ set(DZSDK_QT_SQL_TARGET	Qt4::QtSql)
 set(DZSDK_QT_XML_TARGET	Qt4::QtXml)
 
 ############################
-# DzBridge SETTINGS
-############################
-#set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
-if(NOT DZBRIDGE_DIR)
-	message(FATAL_ERROR "Missing path to DzBridge folder")
-	return()
-endif()
-set(DZBRIDGE_INCLUDE_DIR "${DZBRIDGE_DIR}/include" CACHE PATH "Path to Opensubdiv include folder (usually same as root folder)" )
-if(WIN32)
-	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
-	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
-
-	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
-	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
-elseif(APPLE)
-	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
-	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
-
-	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
-	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
-endif()
-
-
-if(NOT USE_DZBRIDGE_STATIC)
-	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_SHARED}" CACHE FILEPATH "")
-	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_SHARED}" CACHE FILEPATH "")
-else()
-	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_STATIC}" CACHE FILEPATH "")
-	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_STATIC}" CACHE FILEPATH "")
-endif()
-
-
-############################
 # FBX SETTINGS
 ############################
 IF(NOT WIN32)
@@ -223,26 +192,26 @@ IF(NOT WIN32)
 
 ENDIF(NOT WIN32)
 
-set(FBX_SDK_DIR "" CACHE PATH "Path to FBX SDK" )
-#if(NOT FBX_SDK_DIR)
-#	message(FATAL_ERROR "Missing path to FBX SDK folder")
-#	return()
-#endif()
+#set(FBX_SDK_DIR "" CACHE PATH "Path to FBX SDK" )
+if(NOT FBX_SDK_DIR)
+	message(FATAL_ERROR "Missing path to FBX SDK folder")
+	return()
+endif()
 
 set(FBX_SDK_INCLUDE "${FBX_SDK_DIR}/include" CACHE PATH "Path to FBX SDK Includes" )
 if(WIN32)
 	set(FBX_PLATFORM "vs2017/x64/release")
 	set(FBX_SDK_LIB "${FBX_SDK_DIR}/lib/${FBX_PLATFORM}/libfbxsdk-md.lib" CACHE FILEPATH "Path to FBX SDK static library (libfbx-md.lib)" )
 	set(FBX_SDK_XMLLIB "${FBX_SDK_DIR}/lib/${FBX_PLATFORM}/libxml2-md.lib" CACHE FILEPATH "Path to FBX SDK XML library (libxml2-md.lib)" )
-	set(FBX_IMPORT_LIBS 
-		${FBX_SDK_LIB} 
+	set(FBX_IMPORT_LIBS
+		${FBX_SDK_LIB}
 		${FBX_SDK_XMLLIB}
 		${FBX_LINKER_FLAGS})
 elseif(APPLE)
 #	set(FBX_PLATFORM "clang/libstdcpp/release")
     set(FBX_PLATFORM "clang/release")
 	set(FBX_SDK_LIB "${FBX_SDK_DIR}/lib/${FBX_PLATFORM}/libfbxsdk.a" CACHE FILEPATH "Path to FBX SDK static library (libfbxsdk.a)" )
-	set(FBX_IMPORT_LIBS 
+	set(FBX_IMPORT_LIBS
 		${FBX_SDK_LIB}
 		${FBX_LINKER_FLAGS})
 endif()
@@ -250,16 +219,48 @@ endif()
 ############################
 # Opensubdiv SETTINGS
 ############################
-set(OPENSUBDIV_DIR "" CACHE PATH "Path to Opensubdiv folder" )
-#if(NOT OPENSUBDIV_DIR)
-#	message(FATAL_ERROR "Missing path to Opensubdiv folder")
-#	return()
-#endif()
+#set(OPENSUBDIV_DIR "" CACHE PATH "Path to Opensubdiv folder" )
+if(NOT OPENSUBDIV_DIR)
+	message(FATAL_ERROR "Missing path to Opensubdiv folder")
+	return()
+endif()
 set(OPENSUBDIV_INCLUDE "${OPENSUBDIV_DIR}" CACHE PATH "Path to Opensubdiv include folder (usually same as root folder)" )
 if(WIN32)
 	set(OPENSUBDIV_LIB "${OPENSUBDIV_DIR}/build/lib/Release/osdCPU.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (osdCPU.lib)" )
 elseif(APPLE)
 	set(OPENSUBDIV_LIB "${OPENSUBDIV_DIR}/build/lib/Release/libosdCPU.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (libosdCPU.a)" )
+endif()
+
+############################
+# DzBridge SETTINGS
+############################
+#set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
+if(NOT DZBRIDGE_DIR)
+	message(FATAL_ERROR "Missing path to DzBridge folder")
+	return()
+endif()
+set(DZBRIDGE_INCLUDE_DIR "${DZBRIDGE_DIR}/include" CACHE PATH "Path to Opensubdiv include folder (usually same as root folder)" )
+if(WIN32)
+	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
+	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.lib)" )
+
+	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
+	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.lib" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.lib)" )
+elseif(APPLE)
+	set(DZBRIDGE_LIB_SHARED "${DZBRIDGE_DIR}/out/lib/Release/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
+	set(DZBRIDGE_LIB_DEBUG_SHARED "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge.a)" )
+
+	set(DZBRIDGE_LIB_STATIC "${DZBRIDGE_DIR}/out/lib/Release/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
+	set(DZBRIDGE_LIB_DEBUG_STATIC "${DZBRIDGE_DIR}/out/lib/Debug/dzbridge-static.a" CACHE FILEPATH "Path to Opensubdiv CPU static library (dzbridge-static.a)" )
+endif()
+if(NOT USE_DZBRIDGE_STATIC)
+	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_SHARED}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_SHARED}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_FLAGS "")
+else()
+	set(DZBRIDGE_LIB "${DZBRIDGE_LIB_STATIC}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_DEBUG "${DZBRIDGE_LIB_DEBUG_STATIC}" CACHE FILEPATH "")
+	set(DZBRIDGE_LIB_FLAGS "DZ_BRIDGE_STATIC")
 endif()
 
 
@@ -271,4 +272,3 @@ list(APPEND CMAKE_AUTOMOC_MOC_OPTIONS -i)
 
 add_subdirectory("Test/UnitTests")
 add_subdirectory("DazStudioPlugin")
-
