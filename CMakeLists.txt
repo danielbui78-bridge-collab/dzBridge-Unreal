@@ -25,6 +25,8 @@ if(APPLE)
 endif(APPLE)
 
 project("DzBridge-Unreal")
+set(FBX_SDK_DIR "" CACHE PATH "Path to FBX SDK" )
+set(OPENSUBDIV_DIR "" CACHE PATH "Path to Opensubdiv folder" )
 set(DZBRIDGE_DIR "" CACHE PATH "Path to DzBridge folder" )
 set(USE_DZBRIDGE_STATIC "ON")
 
