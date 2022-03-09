@@ -1,8 +1,5 @@
 ======= UnitTest Details =======
 
-[ 5] writeConfiguration:
-C++ exception caught.
-
 
 ======= UnitTest Summary =======
 
@@ -14,7 +11,7 @@ Number of UnitTests: 7
 [ 2] resetToDefaults:....[ PASSED ]
 [ 3] readGuiRootFolder:..[ PASSED ]
 [ 4] executeAction:......[ PASSED ]
-[ 5] writeConfiguration:.[ *** FAILED *** ]
+[ 5] writeConfiguration:.[ PASSED ]
 [ 6] setExportOptions:...[ PASSED ]
 
 End of Report.

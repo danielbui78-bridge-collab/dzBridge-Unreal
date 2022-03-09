@@ -152,6 +152,9 @@ void DzUnrealAction::executeAction()
 
 void DzUnrealAction::writeConfiguration()
 {
+	if (m_pSelectedNode == nullptr)
+		return;
+
 	 QString DTUfilename = m_sDestinationPath + m_sAssetName + ".dtu";
 	 QFile DTUfile(DTUfilename);
 	 DTUfile.open(QIODevice::WriteOnly);
